@@ -78,8 +78,7 @@ class Definer:
 		if os.path.exists(r'data\cmd.json'):
 			pass
 		else:
-			loger.fatal_err(
-				'Dataset hasn\'t be found')  # Если не нашел датасет, просто прога превращается в кирпич и ничего не делает (я не смог отсюда закрыть окно)
+			loger.fatal_err('Dataset hasn\'t be found')  # Если не нашел датасет, просто прога превращается в кирпич и ничего не делает (я не смог отсюда закрыть окно)
 			raise SystemExit()
 
 		with open(r'data\cmd.json', 'r', encoding='utf-8') as file:
@@ -166,19 +165,15 @@ class Functions:
 		pass # Еще делаю
 
 	def news(self):
-
 		titles = []
-
 		rss_url = "https://habr.com/ru/rss/news/?fl=ru"
 		xml = get(rss_url)
-
 		parser = Parser(xml=xml.content, limit=10)
 		feed = parser.parse()
-
 		for new in reversed(feed.feed):
 			titles.append(new)
 		item = random.choice(titles)
-		return f'Заговолок: {item.title}\nСодержимое: {item.description.replace("Читать дальше →", "").replace("Читать далее", "")}'
+		return f'{item.description.replace("Читать дальше →", "").replace("Читать далее", "")}'
 
 # Класс с функцией синтеза речи
 class TextToSpeech:
