@@ -98,7 +98,6 @@ if __name__ == '__main__':
 	app = QApplication([])
 
 	w = Widget()
-	#350 620
 	w.resize(350, 620)
 	w.show()
 
