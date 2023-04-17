@@ -20,6 +20,7 @@ from logs import Logger
 from rss_parser import Parser
 from requests import get
 import random
+import keyboard
 
 loger = Logger()
 
@@ -174,6 +175,23 @@ class Functions:
 			titles.append(new)
 		item = random.choice(titles)
 		return f'{item.description.replace("Читать дальше →", "").replace("Читать далее", "")}'
+
+	def write_arg(self, txt): # я не хочу это обьяснять, грубо говоря оно просто находит ключевое слово экей "напиши", распознает весь текст после этого слова и печатает
+		point = 0
+		text = str()
+		s = txt.split()
+		for i in s:
+			for j in Definer().cmd_list['write_arg']:
+				if j in i:
+					point = s.index(i)
+					break
+		for i in range(point+1):
+			s.pop(0)
+		for i in s:
+			text = text+' '+i
+		text = text.strip()
+		keyboard.write(text)
+		return f'Написано «{text}»'
 
 # Класс с функцией синтеза речи
 class TextToSpeech:
