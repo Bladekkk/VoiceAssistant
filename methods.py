@@ -4,9 +4,7 @@
 import os
 import os.path
 import pyaudio
-import sounddevice as sd
 import time
-import torch
 from PyQt5 import QtCore
 from vosk import KaldiRecognizer, Model
 import datetime
@@ -193,91 +191,80 @@ class Functions:
 		keyboard.write(text)
 		return f'Написано «{text}»'
 
-# Класс с функцией синтеза речи
-class TextToSpeech:
-	def __init__(self):
-		device = torch.device('cpu') # гпу или цпу
-		try:
-			# Загрузка языковой модели, чтобы после первого скачивания использовать ее без интернета
-			self.model, _ = torch.hub.load(repo_or_dir='snakers4/silero-models',
-										   model='silero_tts',
-										   language='ru',
-										   speaker='ru_v3')
-			self.model.to(device)
-		except Exception as e:
-			loger.fatal_err(e)
-
-	@benchmark
-	def say(self, audio):
-		audio = self.model.apply_tts(text=audio,
-									 speaker='kseniya')  # Синтез речи
-		# Воспроизведение синтеза
-		sd.play(audio, 48000)
-		time.sleep(len(audio) / 48000)
-		sd.stop()
-
 
 # Распознавание речи через заранее установленную языковую модель
 # Этот класс наследует другой класс, который может отправлять сигналы
 # для работы в нескольких потоках
 class RecordThreadHandler(QtCore.QThread):
-	tts = TextToSpeech()
-	signal = QtCore.pyqtSignal(list) # Инициализация этого сигнала
-	handler_status: bool = True # Активна ли функция распознавания
-	# Много всякой инициализации
-	path = os.getcwd() + r'\data\vosk-model-small-ru-0.22'
-	if os.path.exists(path):
-		pass
-	else:
-		loger.fatal_err('Vosk model hasn\'t be found')
-		raise SystemExit()
-	model = Model(path)
-	rec = KaldiRecognizer(model, 16000)
-	p = pyaudio.PyAudio()
-	stream = p.open(
-		format=pyaudio.paInt16,
-		channels=1,
-		rate=16000,
-		input=True,
-		frames_per_buffer=8000
-	)
+	signal = QtCore.pyqtSignal(list)  # Инициализация этого сигнала
+	handler_status: bool = True  # Активна ли функция распознавания
 
-	# Запуск распознавания
+	def __init__(self):
+		super().__init__()
+		path = os.path.join(os.getcwd(), 'data', 'vosk-model-small-ru-0.22')
+		if not os.path.exists(path):
+			loger.fatal_err('Vosk model hasn\'t been found')
+			raise SystemExit()
+
+		self.model = Model(path)
+		self.rec = KaldiRecognizer(self.model, 16000)
+		self.p = pyaudio.PyAudio()
+		self.stream = self.p.open(
+			format=pyaudio.paInt16,
+			channels=1,
+			rate=16000,
+			input=True,
+			frames_per_buffer=8000
+		)
+
 	def run(self):
-
 		self.signal.emit(['start_thread'])
 
+		while self.handler_status:
+			self.stream.start_stream()  # начать слушать
+			data = self.stream.read(2000, exception_on_overflow=False)
+
+			if len(data) == 0:  # Если никакого звука нет (Но редко работает, т.к. всегда есть микрошумы)
+				self.stream.stop_stream()
+				continue
+
+			elif self.rec.AcceptWaveform(data) and self.handler_status:
+				txt = clean(self.rec.Result()).capitalize()  # Получение очищенной фразы
+				if txt != '':  # Если хоть что-то распозналось
+					self.stream.stop_stream()  # Прекращение записи
+					txt = stn(txt.lower())  # изменить в тексте все названия чисел на сами числа (работает лишь от нуля до 100, но пока-что больше не надо)
+					loger.log(f'Recognized text: {txt}')
+					self.signal.emit(['user_responce', txt])  # Сигнал о распознанном тексте, чтобы вкинуть его в интерфейс
+					output = str(Definer().define(txt.lower()))  # Запускаем обработку распознанной реплики пользователя
+					loger.log(f'Bot\'s answer: {output}')
+
+					if output != 'None':
+						# Thread(target=lambda: self.tts.say(audio=output)).start()
+						# self.tts.say(output)
+						self.signal.emit(['bot_responce', output])
+
+		self.stream.stop_stream()
+
+class FileWatcherThread(QtCore.QThread):
+	file_changed = QtCore.pyqtSignal(str)
+
+	def __init__(self, filename):
+		super().__init__()
+		self.filename = filename
+		try:
+			with open(self.filename, 'r') as file:
+				self.now_log = file.read()
+		except:
+			self.now_log = None
+
+	def run(self):
 		while True:
 			try:
-				while self.handler_status:
-					self.stream.start_stream()  # начать слушать
-					data = self.stream.read(2000, exception_on_overflow=False)
-					if len(data) == 0: # Если никакого звука нет (Но редко работает, т.к. всегда есть микрошумы)
-						self.stream.stop_stream()
-						break
-					if self.rec.AcceptWaveform(data) and self.handler_status:
-						txt = clean(self.rec.Result()).capitalize() # Получение очищенной фразы
-						if txt != '': # Если хоть что-то распозналось
-							self.stream.stop_stream() # Прекращение записи
-							txt = stn(txt.lower()) # изменить в тексте все названия чисел на сами числа (работает лишь от нуля до 100, но пока-что больше не надо)
-							loger.log(f'Recognized text: {txt}')
-							self.signal.emit(['user_responce', txt]) # Сигнал о распознанном тексте, чтобы вкинуть его в интерфейс
-							output = str(Definer().define(txt.lower()))  # Запускаем обработку распознанной реплики пользователя
-							loger.log(f'Bot\'s answer: {output}')
-							if output != 'None':
-								#Thread(target=lambda: self.tts.say(audio=output)).start()
-								#self.tts.say(output)
-								self.signal.emit(['bot_responce', output])
-
-							continue
-						else:
-							continue
-				else:
-					break
-			except Exception as e:
-				loger.warning(e)
-
-
-# Оставляю это место чтобы быстро проверять функции
-if __name__ == "__main__":
-	pass
+				with open(self.filename, 'r') as file:
+					text = file.read()
+					if text != self.now_log:
+						self.now_log = text
+						self.file_changed.emit(text)
+			except:
+				pass
+			self.msleep(500)

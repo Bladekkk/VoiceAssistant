@@ -1,3 +1,0 @@
-[14:24:20][Log]: Recognized text: погодка
-[14:24:20][Log]: Recognized command: weather
-[14:24:20][Log]: Bot's answer: Сейчас 10°C, переменная облачность
