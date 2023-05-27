@@ -76,7 +76,9 @@ class Ui_MainWindow(object):
         self.version_3.setObjectName("version_3")
         self.logs_plain = QtWidgets.QPlainTextEdit(self.centralwidget)
         self.logs_plain.setGeometry(QtCore.QRect(360, 400, 320, 205))
-        self.logs_plain.setStyleSheet("background-color: rgb(249, 255, 255);")
+        self.logs_plain.setStyleSheet("background-color: rgb(249, 255, 255);\n"
+"font: 75 12pt \"System\";")
+        self.logs_plain.setPlainText("")
         self.logs_plain.setObjectName("logs_plain")
         self.groupBox = QtWidgets.QGroupBox(self.centralwidget)
         self.groupBox.setGeometry(QtCore.QRect(360, 60, 320, 280))
@@ -140,6 +142,20 @@ class Ui_MainWindow(object):
         self.horizontalSlider.setInvertedAppearance(False)
         self.horizontalSlider.setInvertedControls(False)
         self.horizontalSlider.setObjectName("horizontalSlider")
+        self.label_2 = QtWidgets.QLabel(self.groupBox)
+        self.label_2.setGeometry(QtCore.QRect(20, 200, 51, 21))
+        self.label_2.setStyleSheet("border: 0px;\n"
+"font: 75 32pt \"System\";")
+        self.label_2.setObjectName("label_2")
+        self.city_lineedit = QtWidgets.QLineEdit(self.groupBox)
+        self.city_lineedit.setGeometry(QtCore.QRect(80, 200, 131, 21))
+        self.city_lineedit.setObjectName("city_lineedit")
+        self.label_3 = QtWidgets.QLabel(self.groupBox)
+        self.label_3.setGeometry(QtCore.QRect(220, 200, 91, 21))
+        self.label_3.setStyleSheet("border: 0px;\n"
+"color: rgb(85, 85, 85);\n"
+"font: 75 32pt \"System\";")
+        self.label_3.setObjectName("label_3")
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(MainWindow)
@@ -161,6 +177,8 @@ class Ui_MainWindow(object):
         self.checkBox_4.setText(_translate("MainWindow", "Настройка 4"))
         self.checkBox_5.setText(_translate("MainWindow", "Настройка 5"))
         self.label.setText(_translate("MainWindow", "Прозрачность окна"))
+        self.label_2.setText(_translate("MainWindow", "Город:"))
+        self.label_3.setText(_translate("MainWindow", "(для погоды)"))
 
 
 if __name__ == "__main__":

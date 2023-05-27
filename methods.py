@@ -19,9 +19,9 @@ from rss_parser import Parser
 from requests import get
 import random
 import keyboard
+import pyttsx3 as pt
 
 loger = Logger()
-
 
 def benchmark(func):
 	def wrapper(*args, **kwargs):
@@ -67,6 +67,20 @@ def clean(text):
 	text = text.replace('{  "text" : "', '')
 	text = text.replace('"}', '')
 	return text
+
+
+class TextToSpeech:
+	def __init__(self):
+		self.engine = pt.init()
+		self.engine.setProperty('rate', 150)
+		self.voices = self.engine.getProperty('voices')
+		for voice in self.voices:
+			if voice.name == 'Artemiy':
+				self.engine.setProperty('voice', voice.id)
+
+	def say(self, text):
+		self.engine.say(text)
+		self.engine.runAndWait()
 
 
 # Класс для определения и запуска функций в исходном тексте
@@ -216,32 +230,34 @@ class RecordThreadHandler(QtCore.QThread):
 			input=True,
 			frames_per_buffer=8000
 		)
+		self.isFree: bool = True
 
 	def run(self):
 		self.signal.emit(['start_thread'])
 
 		while self.handler_status:
-			self.stream.start_stream()  # начать слушать
-			data = self.stream.read(2000, exception_on_overflow=False)
+			if self.isFree:
+				self.stream.start_stream()  # начать слушать
+				data = self.stream.read(2000, exception_on_overflow=False)
 
-			if len(data) == 0:  # Если никакого звука нет (Но редко работает, т.к. всегда есть микрошумы)
-				self.stream.stop_stream()
-				continue
+				if len(data) == 0:
+					self.stream.stop_stream()
+					continue
 
-			elif self.rec.AcceptWaveform(data) and self.handler_status:
-				txt = clean(self.rec.Result()).capitalize()  # Получение очищенной фразы
-				if txt != '':  # Если хоть что-то распозналось
-					self.stream.stop_stream()  # Прекращение записи
-					txt = stn(txt.lower())  # изменить в тексте все названия чисел на сами числа (работает лишь от нуля до 100, но пока-что больше не надо)
-					loger.log(f'Recognized text: {txt}')
-					self.signal.emit(['user_responce', txt])  # Сигнал о распознанном тексте, чтобы вкинуть его в интерфейс
-					output = str(Definer().define(txt.lower()))  # Запускаем обработку распознанной реплики пользователя
-					loger.log(f'Bot\'s answer: {output}')
+				elif self.rec.AcceptWaveform(data) and self.handler_status and self.isFree:
+					txt = clean(self.rec.Result()).capitalize()  # Получение очищенной фразы
+					if txt != '' and self.isFree:  # Если хоть что-то распозналось
+						self.stream.stop_stream()  # Прекращение записи
+						txt = stn(txt.lower())  # изменить в тексте все названия чисел на сами числа (работает лишь от нуля до 100, но пока-что больше не надо)
+						loger.log(f'Recognized text: {txt}')
+						self.signal.emit(['user_responce', txt])  # Сигнал о распознанном тексте, чтобы вкинуть его в интерфейс
+						output = str(Definer().define(txt.lower()))  # Запускаем обработку распознанной реплики пользователя
+						loger.log(f'Bot\'s answer: {output}')
 
-					if output != 'None':
-						# Thread(target=lambda: self.tts.say(audio=output)).start()
-						# self.tts.say(output)
-						self.signal.emit(['bot_responce', output])
+						if output != 'None':
+							# Thread(target=lambda: self.tts.say(audio=output)).start()
+							# self.tts.say(output)
+							self.signal.emit(['bot_responce', output])
 
 		self.stream.stop_stream()
 
@@ -268,3 +284,6 @@ class FileWatcherThread(QtCore.QThread):
 			except:
 				pass
 			self.msleep(500)
+
+if __name__ == '__main__':
+	pass

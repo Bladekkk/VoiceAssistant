@@ -3,8 +3,11 @@ from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from PyQt5 import QtGui
 
 from alpha import Ui_MainWindow
-from methods import RecordThreadHandler, FileWatcherThread
+from methods import RecordThreadHandler, FileWatcherThread, TextToSpeech
 from logs import cur_time
+
+import time
+from threading import Thread
 
 class Widget(QMainWindow, Ui_MainWindow):
     def __init__(self):
@@ -25,8 +28,8 @@ class Widget(QMainWindow, Ui_MainWindow):
         self.thread_handler = RecordThreadHandler()
         self.thread_handler.signal.connect(self.signal_handler)
 
-        time, date = cur_time()
-        self.log_file = f'log/{date}/{time}.txt'
+        time1, date = cur_time()
+        self.log_file = f'log/{date}/{time1}.txt'
         self.file_watcher = FileWatcherThread(self.log_file)
         self.file_watcher.file_changed.connect(self.update_text_edit)
 
@@ -37,6 +40,14 @@ class Widget(QMainWindow, Ui_MainWindow):
         self.font = QtGui.QFont()
         self.font.setFamily("System")
         self.font.setPointSize(10)
+
+        self.tts = TextToSpeech()
+
+    def say1(self, text):
+        self.thread_handler.isFree = False
+        self.tts.say(text)
+        time.sleep(1)
+        self.thread_handler.isFree = True
 
     def resizer(self):
         a = str(self.size()).replace('PyQt5.QtCore.QSize(', '').replace(')', '')
@@ -89,6 +100,7 @@ class Widget(QMainWindow, Ui_MainWindow):
         elif value[0] == 'bot_responce':
             output = str(value[1])
             if output != 'None':
+                Thread(target=lambda: self.say1(output)).start()
                 bot_resp = QListWidgetItem()
                 bot_resp.setTextAlignment(Qt.AlignRight)
                 bot_resp.setForeground(Qt.black)
