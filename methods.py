@@ -15,7 +15,7 @@ import screen_brightness_control as sbc
 from text_to_num import stn
 import psutil
 from logs import Logger
-from rss_parser import Parser
+from rss_parser import RSSParser
 from requests import get
 import random
 import keyboard
@@ -181,7 +181,7 @@ class Functions:
 		titles = []
 		rss_url = "https://habr.com/ru/rss/news/?fl=ru"
 		xml = get(rss_url)
-		parser = Parser(xml=xml.content, limit=10)
+		parser = RSSParser(xml=xml.content, limit=10)
 		feed = parser.parse()
 		for new in reversed(feed.feed):
 			titles.append(new)
