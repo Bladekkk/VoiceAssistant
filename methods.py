@@ -14,7 +14,7 @@ from pyowm.utils.config import get_default_config
 import screen_brightness_control as sbc
 from text_to_num import stn
 import psutil
-from logs import Logger
+from utils.logger import Logger
 from rss_parser import RSSParser
 from requests import get
 import random

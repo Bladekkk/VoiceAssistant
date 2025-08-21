@@ -4,7 +4,7 @@ from PyQt5 import QtGui
 
 from alpha import Ui_MainWindow
 from methods import RecordThreadHandler, FileWatcherThread, TextToSpeech
-from logs import cur_time
+from utils.logger import cur_time
 
 import time
 from threading import Thread
