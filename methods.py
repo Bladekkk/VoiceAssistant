@@ -61,12 +61,30 @@ weekdays = {
 
 
 # текст выдаваемый vosk выдается как словарь, но в виде строки, поэтому я просто очищаю ее пока не останется лишь сам текст
+#def clean(text):
+#	text = text.replace('\n', '')
+#	text = text.replace('{  "partial" : "', '')
+#	text = text.replace('{  "text" : "', '')
+#	text = text.replace('"}', '')
+#	return text
+
+
 def clean(text):
-	text = text.replace('\n', '')
-	text = text.replace('{  "partial" : "', '')
-	text = text.replace('{  "text" : "', '')
-	text = text.replace('"}', '')
-	return text
+	try:
+		# Пытаемся преобразовать строку в словарь
+		data = json.loads(text)
+		# Сначала проверяем финальный результат
+		if 'text' in data:
+			return data['text']
+		# Если финального нет, проверяем промежуточный
+		if 'partial' in data:
+			return data['partial']
+		# Если ничего нет, возвращаем пустую строку
+		return ''
+	except json.JSONDecodeError:
+		# Если вообще не JSON, на всякий случай возвращаем исходную строку
+		# или пустую строку, чтобы не ломать логику
+		return text  # или return ''
 
 
 class TextToSpeech:
