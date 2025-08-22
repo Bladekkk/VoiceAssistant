@@ -62,7 +62,7 @@ class Logger:
     def warning(self, text):
         self.basic_log('Warning', text)
 
-    def fatal_err(self, text):
+    def error(self, text):
         self.basic_log('Error', text)
 
 if __name__ == "__main__":

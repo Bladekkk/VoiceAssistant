@@ -12,7 +12,7 @@ from pyowm import OWM
 import json
 from pyowm.utils.config import get_default_config
 import screen_brightness_control as sbc
-from text_to_num import stn
+from utils.text_to_num import stn
 import psutil
 from utils.logger import Logger
 from rss_parser import RSSParser
@@ -58,16 +58,6 @@ weekdays = {
 	"5": "Суббота",
 	"6": "Воскресенье",
 }
-
-
-# текст выдаваемый vosk выдается как словарь, но в виде строки, поэтому я просто очищаю ее пока не останется лишь сам текст
-#def clean(text):
-#	text = text.replace('\n', '')
-#	text = text.replace('{  "partial" : "', '')
-#	text = text.replace('{  "text" : "', '')
-#	text = text.replace('"}', '')
-#	return text
-
 
 def clean(text):
 	try:
